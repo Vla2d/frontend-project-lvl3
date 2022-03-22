@@ -1,6 +1,6 @@
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 
-const module = {
+export default {
   mode: process.env.NODE_ENV || 'development',
   
   module: {
@@ -17,5 +17,3 @@ const module = {
     open: true,
   }
 };
-
-export default module;
