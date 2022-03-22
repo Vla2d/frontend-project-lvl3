@@ -1,8 +1,8 @@
 import axios from 'axios';
 import onChange from 'on-change';
 import * as yup from 'yup';
-import { parserRSS, TypeError } from './utils.js';
-import render from './view.js';
+import { parserRSS, TypeError } from './utils';
+import render from './view';
 
 const schema = yup.string().url().required();
 

@@ -33,6 +33,6 @@ export const parserRSS = (xmltext) => {
   });
 
   console.log({ title, description, items });
-  
+
   return { title, description, items };
 };
