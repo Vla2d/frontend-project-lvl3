@@ -34,12 +34,9 @@ export const parseRSS = (xmltext) => {
     };
   });
 
-  console.log({ title, description, items });
-  // console.log(doc);
-
   return { title, description, items };
 };
 
 export const downloadRSS = (url) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${url}`)
-  .then((res) => { console.log(res); return res; })
+  .then((res) => res)
   .then((res) => parseRSS(res.data.contents));

@@ -7,18 +7,18 @@
 </head>
 
 <body>
-   <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modal" aria-hidden="true">
+   <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
       <div class="modal-dialog">
          <div class="modal-content">
             <div class="modal-header">
-               <h5 class="modal-title" id="modal">Modal title</h5>
+               <h5 class="modal-title" id="modal_title">Modal title</h5>
                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" id="modal_body">
             </div>
             <div class="modal-footer">
-               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-               <a type="button" class="btn btn-primary full-article" target="_blank">Link</a>
+               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="modal_close">Close</button>
+               <a type="button" href="#" class="btn btn-primary full-article" target="_blank" id="modal_link">Link</a>
             </div>
          </div>
       </div>
@@ -38,11 +38,11 @@
                               class=" mb-0 text-muted">URL</label></div>
                      </div>
                      <div class="col-auto"><button type="submit" aria-label="add"
-                           class="h-100 btn btn-lg btn-primary px-sm-5" id="add">Добавить</button></div>
+                           class="h-100 btn btn-lg btn-primary px-sm-5" id="add_button">Добавить</button></div>
                   </div>
                   <p id="error_text" class="text-danger m-0 d-none"></p>
                </form>
-               <p class="mt-2 mb-0 text-muted">Пример: https://ru.hexlet.io/lessons.rss</p>
+               <p class="mt-2 mb-0 text-muted" id="example_text">Пример: https://ru.hexlet.io/lessons.rss</p>
                <p class="feedback m-0 position-absolute small text-danger"></p>
             </div>
          </div>
@@ -50,11 +50,11 @@
       <section class="container-fluid container-xxl p-5">
          <div class="row d-none" id="main_container">
             <div class="col-md-10 col-lg-8 order-1 mx-auto">
-               <h2 class="text-center">Posts</h2>
+               <h2 class="text-center" id="posts_title">Posts</h2>
                <ul id="posts_list"></ul>
             </div>
             <div class="col-md-10 col-lg-4 mx-auto order-0 order-lg-1">
-               <h2 class="text-center">Feeds</h2>
+               <h2 class="text-center" id="feeds_title">Feeds</h2>
                <ul id="feeds_list"></ul>
             </div>
          </div>
