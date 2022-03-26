@@ -10,15 +10,15 @@ const schema = yup.string().url().required();
 
 i18next.init({
   lng: 'ru',
-  debug: true,
+  // debug: true,
   resources: {
     ru,
   },
 });
 
 const errors = {
-  required: i18next.t('errors.required'),
-  url: i18next.t('errors.url'),
+  required: i18next.t('errors.required'), // yup validation error
+  url: i18next.t('errors.url'), // yup validation error
   rss: i18next.t('errors.rss'),
   sameUrl: i18next.t('errors.sameUrl'),
   network: i18next.t('errors.network'),
@@ -35,8 +35,12 @@ export default () => {
   const form = document.querySelector('form');
   const input = document.querySelector('#url_input');
   const errorText = document.querySelector('#error_text');
+  const feeds = document.querySelector('#feeds_list');
+  const posts = document.querySelector('#posts_list');
 
-  const watchedState = onChange(state, () => render(watchedState, { input, errorText }));
+  const watchedState = onChange(state, () => render(watchedState, {
+    input, errorText, feeds, posts,
+  }));
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -47,10 +51,10 @@ export default () => {
         if (watchedState.urls.includes(input.value)) {
           throw new TypeError('sameUrl', 'url exists');
         }
-        return axios.get(input.value);
+        return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${input.value}`);
       })
       .then((res) => { console.log(res); return res; })
-      .then((res) => parserRSS(res.data))
+      .then((res) => parserRSS(res.data.contents))
       .then(({ title, description, items }) => {
         watchedState.feeds.push({ title, description });
         watchedState.posts.push(...items);
