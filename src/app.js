@@ -1,8 +1,8 @@
-import axios from 'axios';
+import _ from 'lodash';
 import onChange from 'on-change';
 import * as yup from 'yup';
 import i18next from 'i18next';
-import { parserRSS, TypeError } from './utils.js';
+import { downloadRSS, TypeError } from './utils.js';
 import render from './view.js';
 import ru from './locales/ru.js';
 
@@ -17,11 +17,33 @@ i18next.init({
 });
 
 const errors = {
-  required: i18next.t('errors.required'), // yup validation error
-  url: i18next.t('errors.url'), // yup validation error
+  required: i18next.t('errors.required'),
+  url: i18next.t('errors.url'),
   rss: i18next.t('errors.rss'),
   sameUrl: i18next.t('errors.sameUrl'),
   network: i18next.t('errors.network'),
+};
+
+const form = document.querySelector('form');
+const input = document.querySelector('#url_input');
+const errorText = document.querySelector('#error_text');
+const feeds = document.querySelector('#feeds_list');
+const posts = document.querySelector('#posts_list');
+
+/* eslint-disable no-param-reassign */
+
+const updatePosts = (watchedState, timeout = 5000) => {
+  const rssChanges = watchedState.urls.map((url) => downloadRSS(url)
+    .then(({ items: newPosts }) => {
+      const updatedPosts = _.unionBy(watchedState.posts, newPosts, 'guid');
+      watchedState.posts = updatedPosts;
+    })
+    .catch((err) => {
+      const type = err.type ?? 'network';
+      watchedState.error = { type, message: errors[type] };
+    }));
+  Promise.allSettled(rssChanges)
+    .then(() => setTimeout(() => updatePosts(watchedState), timeout));
 };
 
 export default () => {
@@ -31,12 +53,6 @@ export default () => {
     posts: [],
     error: null,
   };
-
-  const form = document.querySelector('form');
-  const input = document.querySelector('#url_input');
-  const errorText = document.querySelector('#error_text');
-  const feeds = document.querySelector('#feeds_list');
-  const posts = document.querySelector('#posts_list');
 
   const watchedState = onChange(state, () => render(watchedState, {
     input, errorText, feeds, posts,
@@ -51,20 +67,21 @@ export default () => {
         if (watchedState.urls.includes(input.value)) {
           throw new TypeError('sameUrl', 'url exists');
         }
-        return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${input.value}`);
+        return downloadRSS(input.value);
       })
-      .then((res) => { console.log(res); return res; })
-      .then((res) => parserRSS(res.data.contents))
       .then(({ title, description, items }) => {
-        watchedState.feeds.push({ title, description });
+        watchedState.feeds.push({ title, description, url: input.value });
         watchedState.posts.push(...items);
         watchedState.urls.push(input.value);
         input.value = '';
       })
       .catch((err) => {
+        // console.log(err);
         const type = err.type ?? 'network';
         watchedState.error = { type, message: errors[type] };
         console.log(watchedState.error);
       });
   });
+
+  updatePosts(watchedState);
 };
