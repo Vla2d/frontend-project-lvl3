@@ -48,13 +48,14 @@ export default () => {
     feeds: [],
     posts: [],
     error: null,
+    isSuccess: null,
     modal: { title: '', content: '', link: '#' },
     readIds: new Set(),
   };
 
   const elements = {
     input: document.querySelector('#url_input'),
-    errorText: document.querySelector('#error_text'),
+    infoText: document.querySelector('#info_text'),
     addButton: document.querySelector('#add_button'),
     feeds: document.querySelector('#feeds_list'),
     posts: document.querySelector('#posts_list'),
@@ -85,15 +86,17 @@ export default () => {
         watchedState.feeds.push({ title, description, url: elements.input.value });
         watchedState.posts.push(...items);
         watchedState.urls.push(elements.input.value);
+        watchedState.isSuccess = true;
         elements.input.value = '';
       })
       .catch((err) => {
         const type = err.type ?? 'network';
         watchedState.error = { type, message: errors[type] };
+        watchedState.isSuccess = false;
         console.log(watchedState.error);
       });
   });
 
-  updatePosts(watchedState);
   render(watchedState, elements);
+  updatePosts(watchedState);
 };

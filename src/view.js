@@ -7,18 +7,36 @@ export default (state, elements) => {
   console.log('state: ', state);
 
   const {
-    input, errorText, feeds, posts, modalTitle, modalContent, modalLink,
+    input, infoText, feeds, posts, modalTitle, modalContent, modalLink,
   } = elements;
+
+  input.classList.remove('is-invalid');
 
   elements.addButton.textContent = i18next.t('navigation.add');
   elements.exampleText.textContent = i18next.t('content.example');
   elements.feedsTitle.textContent = i18next.t('content.feeds');
   elements.postsTitle.textContent = i18next.t('content.posts');
 
-  input.classList.remove('is-invalid');
-  errorText.classList.add('d-none');
-
   const container = document.querySelector('#main_container');
+
+  // Render error
+  if (state.error) {
+    const { type } = state.error;
+    if (type === 'url' || type === 'required') {
+      input.classList.add('is-invalid');
+    }
+    infoText.textContent = state.error.message;
+    infoText.classList.remove('text-success');
+    infoText.classList.add('text-danger');
+    infoText.classList.remove('d-none');
+    return;
+  }
+  if (state.isSuccess) {
+    infoText.textContent = i18next.t('info.success');
+    infoText.classList.remove('text-danger');
+    infoText.classList.add('text-success');
+    infoText.classList.remove('d-none');
+  }
 
   // Render feeds
   if (state.feeds.length > 0) {
@@ -68,17 +86,6 @@ export default (state, elements) => {
     });
   } else {
     container.classList.add('d-none');
-  }
-
-  // Render error
-  if (state.error) {
-    const { type } = state.error;
-    if (type === 'rss' || type === 'required' || type === 'url') {
-      input.classList.add('is-invalid');
-    }
-
-    errorText.textContent = state.error.message;
-    errorText.classList.remove('d-none');
   }
 
   modalTitle.textContent = state.modal.title;
