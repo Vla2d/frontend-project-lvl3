@@ -1,102 +1,64 @@
-import _ from 'lodash';
-import onChange from 'on-change';
-import * as yup from 'yup';
 import i18next from 'i18next';
-import { downloadRSS, TypeError } from './utils.js';
-import render from './view.js';
+import { setLocale } from 'yup';
+import { handleAddFeed } from './handler.js';
+import initView from './view.js';
 import ru from './locales/ru.js';
 
-const schema = yup.string().url().required();
+const i18nInstance = i18next.createInstance();
 
-i18next.init({
+i18nInstance.init({
   lng: 'ru',
-  // debug: true,
   resources: {
     ru,
   },
+}).then(() => {
+  setLocale({
+    mixed: {
+      notOneOf: () => i18nInstance.t('errors.sameUrl'),
+    },
+    string: {
+      url: () => i18nInstance.t('errors.invalidUrl'),
+    },
+  });
 });
 
-const errors = {
-  required: i18next.t('errors.required'),
-  url: i18next.t('errors.url'),
-  rss: i18next.t('errors.rss'),
-  sameUrl: i18next.t('errors.sameUrl'),
-  network: i18next.t('errors.network'),
+const elements = {
+  input: document.querySelector('#url_input'),
+  infoText: document.querySelector('#info_text'),
+  addButton: document.querySelector('#add_button'),
+  feeds: document.querySelector('#feeds_list'),
+  posts: document.querySelector('#posts_list'),
+  feedsTitle: document.querySelector('#feeds_title'),
+  postsTitle: document.querySelector('#posts_title'),
+  exampleText: document.querySelector('#example_text'),
+
+  container: document.querySelector('#main_container'),
+
+  modalTitle: document.querySelector('#modal_title'),
+  modalContent: document.querySelector('#modal_body'),
+  modalLink: document.querySelector('#modal_link'),
+  modalClose: document.querySelector('#modal_close'),
 };
-
-/* eslint-disable no-param-reassign */
-
-const updatePosts = (watchedState, timeout = 5000) => {
-  const rssChanges = watchedState.urls.map((url) => downloadRSS(url)
-    .then(({ items: newPosts }) => {
-      const updatedPosts = _.unionBy(watchedState.posts, newPosts, 'guid');
-      watchedState.posts = updatedPosts;
-    })
-    .catch((err) => {
-      const type = err.type ?? 'network';
-      watchedState.error = { type, message: errors[type] };
-    }));
-  Promise.allSettled(rssChanges)
-    .then(() => setTimeout(() => updatePosts(watchedState), timeout));
-};
-
-/* eslint-enable no-param-reassign */
 
 export default () => {
   const state = {
     urls: [],
     feeds: [],
     posts: [],
-    error: null,
-    isSuccess: null,
-    modal: { title: '', content: '', link: '#' },
+    form: {
+      state: 'filling',
+      error: null,
+    },
     readIds: new Set(),
   };
 
-  const elements = {
-    input: document.querySelector('#url_input'),
-    infoText: document.querySelector('#info_text'),
-    addButton: document.querySelector('#add_button'),
-    feeds: document.querySelector('#feeds_list'),
-    posts: document.querySelector('#posts_list'),
-    feedsTitle: document.querySelector('#feeds_title'),
-    postsTitle: document.querySelector('#posts_title'),
-    exampleText: document.querySelector('#example_text'),
+  elements.addButton.textContent = i18nInstance.t('navigation.add');
 
-    modalTitle: document.querySelector('#modal_title'),
-    modalContent: document.querySelector('#modal_body'),
-    modalLink: document.querySelector('#modal_link'),
-  };
-
-  const watchedState = onChange(state, () => render(watchedState, elements));
+  const watchedState = initView(state, i18nInstance, elements);
 
   const form = document.querySelector('form');
+
   form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    watchedState.error = null;
-
-    schema.validate(elements.input.value)
-      .then(() => {
-        if (watchedState.urls.includes(elements.input.value)) {
-          throw new TypeError('sameUrl', 'url exists');
-        }
-        return downloadRSS(elements.input.value);
-      })
-      .then(({ title, description, items }) => {
-        watchedState.feeds.push({ title, description, url: elements.input.value });
-        watchedState.posts.push(...items);
-        watchedState.urls.push(elements.input.value);
-        watchedState.isSuccess = true;
-        elements.input.value = '';
-      })
-      .catch((err) => {
-        const type = err.type ?? 'network';
-        watchedState.error = { type, message: errors[type] };
-        watchedState.isSuccess = false;
-        console.log(watchedState.error);
-      });
+    handleAddFeed(e, watchedState, i18nInstance);
   });
-
-  render(watchedState, elements);
-  updatePosts(watchedState);
 };
