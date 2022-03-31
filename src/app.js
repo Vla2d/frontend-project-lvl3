@@ -49,6 +49,9 @@ export default () => {
       state: 'filling',
       error: null,
     },
+    updateProcess: {
+      state: 'idle',
+    },
     readIds: new Set(),
   };
 

@@ -1,10 +1,41 @@
 /* eslint-disable no-param-reassign */
 import axios from 'axios';
+import _ from 'lodash';
 import parseRSS from './parser.js';
 import validateLink from './validator.js';
 
 const RSSLoader = (url) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${url}`)
   .then((res) => parseRSS(url, res.data.contents));
+
+const links = [];
+
+const RSSupdater = (state) => {
+  const promises = links.map(RSSLoader);
+
+  Promise.all(promises)
+    .then((results) => {
+      const posts = results.flatMap((result) => result.posts);
+
+      const allPosts = _.union(posts, state.posts);
+      const newPosts = _.differenceBy(allPosts, state.posts, 'url');
+
+      if (newPosts.length > 0) {
+        state.posts = [...newPosts, ...state.posts];
+      }
+    })
+    .finally(() => {
+      setTimeout(() => RSSupdater(state), 5000);
+    });
+};
+
+const updateRSS = (link, state) => {
+  links.push(link);
+
+  if (state.updateProcess.state === 'idle') {
+    state.updateProcess.state = 'running';
+    setTimeout(() => RSSupdater(state), 5000);
+  }
+};
 
 export const handleAddFeed = (e, state, i18nInstance) => {
   e.preventDefault();
@@ -27,6 +58,7 @@ export const handleAddFeed = (e, state, i18nInstance) => {
         state.urls.push(link);
 
         state.form.state = 'success';
+        updateRSS(link, state);
         e.target.reset();
       })
       .catch((err) => {
