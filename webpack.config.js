@@ -15,7 +15,7 @@ export default {
           },
         },
       },
-      { test: /\.css$/, use: ['style-loader', 'css-loader'] }
+      { test: /\.css$/, use: ['style-loader', 'css-loader'] },
     ],
   },
   plugins: [
@@ -26,5 +26,5 @@ export default {
   devServer: {
     open: true,
   },
-  devtool: 'source-map'
+  devtool: 'source-map',
 };
