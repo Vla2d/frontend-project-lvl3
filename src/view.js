@@ -3,11 +3,8 @@ import onChange from 'on-change';
 import { handleViewPost } from './handler.js';
 
 const render = (state, i18nInstance, elements) => {
-  // console.log('rerender');
-  // console.log('state: ', state);
-
-  elements.addButton.textContent = i18nInstance.t('navigation.add');
-  elements.exampleText.textContent = i18nInstance.t('content.example');
+  elements.addButton.textContent = i18nInstance.t('buttons.add');
+  elements.exampleText.textContent = `${i18nInstance.t('content.example')}: https://ru.hexlet.io/lessons.rss`;
   elements.feedsTitle.textContent = i18nInstance.t('content.feeds');
   elements.postsTitle.textContent = i18nInstance.t('content.posts');
   elements.modalLink.textContent = i18nInstance.t('modal.article');
@@ -23,7 +20,7 @@ const render = (state, i18nInstance, elements) => {
 
       li.innerHTML = `
       <h3>${feed.title}</h3>
-      <p>${feed.desc}</p>
+      <p>${feed.description}</p>
       `;
 
       elements.feeds.append(li);
@@ -48,7 +45,8 @@ const render = (state, i18nInstance, elements) => {
           class="btn btn-primary btn-sm"
           data-bs-toggle="modal"
           data-bs-target="#modal"
-        >${i18nInstance.t('navigation.preview')}</button>
+        >${i18nInstance.t('buttons.preview')}
+        </button>
       `;
 
       const a = li.querySelector('a');
@@ -94,7 +92,6 @@ export default (state, i18nInstance, elements) => {
   };
 
   const watchedState = onChange(state, (path, value) => {
-    console.log(state);
     if (path === 'form.state') {
       switch (value) {
         case 'pending':
@@ -104,7 +101,7 @@ export default (state, i18nInstance, elements) => {
         case 'success':
           toggleForm(false);
           clearFeedback();
-          elements.infoText.textContent = i18nInstance.t('info.success');
+          elements.infoText.textContent = i18nInstance.t('loadStatus.success');
           elements.infoText.classList.add('text-success');
           elements.infoText.classList.remove('d-none');
           break;
@@ -129,6 +126,9 @@ export default (state, i18nInstance, elements) => {
         elements.input.classList.remove('is-invalid');
         elements.infoText.classList.remove('text-danger');
       }
+    } else if (path === 'lang') {
+      clearFeedback();
+      render(watchedState, i18nInstance, elements);
     } else {
       render(watchedState, i18nInstance, elements);
     }

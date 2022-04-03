@@ -11,24 +11,24 @@ export default (url, content) => {
   };
 
   const title = doc.querySelector('title').textContent;
-  const desc = doc.querySelector('description').textContent;
+  const description = doc.querySelector('description').textContent;
 
   doc.querySelectorAll('item')
     .forEach((post) => {
       const postTitle = post.querySelector('title').textContent;
-      const postDesc = post.querySelector('description').textContent;
+      const postDescription = post.querySelector('description').textContent;
       const postLink = post.querySelector('link').textContent;
       const postId = _.uniqueId();
 
       const data = {
-        id: postId, feedId, title: postTitle, desc: postDesc, url: postLink,
+        id: postId, feedId, title: postTitle, description: postDescription, url: postLink,
       };
 
       result.posts.push(data);
     });
 
   result.feed = {
-    id: feedId, title, desc, url,
+    id: feedId, title, description, url,
   };
 
   return result;
