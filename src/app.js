@@ -55,8 +55,6 @@ export default () => {
     readIds: new Set(),
   };
 
-  elements.addButton.textContent = i18nInstance.t('navigation.add');
-
   const watchedState = initView(state, i18nInstance, elements);
 
   const form = document.querySelector('form');
