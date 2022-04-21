@@ -1,8 +1,5 @@
-import i18next from 'i18next';
-import { setLocale } from 'yup';
 import { handleAddFeed } from './handler.js';
 import initView from './view.js';
-import ru from './locales/ru.js';
 
 export default () => {
   const state = {
@@ -17,26 +14,9 @@ export default () => {
     updateProcess: {
       state: 'idle',
     },
-    readIds: new Set(),
+    readPosts: new Set(),
+    modal: { currentPost: null },
   };
-
-  const i18nInstance = i18next.createInstance();
-
-  i18nInstance.init({
-    lng: 'ru',
-    resources: {
-      ru,
-    },
-  }).then(() => {
-    setLocale({
-      mixed: {
-        notOneOf: () => i18nInstance.t('loadStatus.sameUrl'),
-      },
-      string: {
-        url: () => i18nInstance.t('loadStatus.invalidUrl'),
-      },
-    });
-  });
 
   const elements = {
     input: document.querySelector('#url_input'),
@@ -56,11 +36,11 @@ export default () => {
     modalClose: document.querySelector('#modal_close'),
   };
 
-  const watchedState = initView(state, i18nInstance, elements);
+  const watchedState = initView(state, elements);
 
   const form = document.querySelector('form');
 
   form.addEventListener('submit', (e) => {
-    handleAddFeed(e, watchedState, i18nInstance);
+    handleAddFeed(e, watchedState);
   });
 };

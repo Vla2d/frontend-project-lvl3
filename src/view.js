@@ -1,10 +1,31 @@
 /* eslint-disable no-param-reassign */
 import onChange from 'on-change';
+import { setLocale } from 'yup';
+import i18next from 'i18next';
 import { handleViewPost } from './handler.js';
+import ru from './locales/ru.js';
 
-const render = (state, i18nInstance, elements) => {
+const i18nInstance = i18next.createInstance();
+
+i18nInstance.init({
+  lng: 'ru',
+  resources: {
+    ru,
+  },
+}).then(() => {
+  setLocale({
+    mixed: {
+      notOneOf: () => i18nInstance.t('loadStatus.sameUrl'),
+    },
+    string: {
+      url: () => i18nInstance.t('loadStatus.invalidUrl'),
+    },
+  });
+});
+
+const render = (state, elements) => {
   elements.addButton.textContent = i18nInstance.t('buttons.add');
-  elements.exampleText.textContent = `${i18nInstance.t('content.example')}: https://ru.hexlet.io/lessons.rss`;
+  elements.exampleText.textContent = i18nInstance.t('content.example');
   elements.feedsTitle.textContent = i18nInstance.t('content.feeds');
   elements.postsTitle.textContent = i18nInstance.t('content.posts');
   elements.modalLink.textContent = i18nInstance.t('modal.article');
@@ -19,8 +40,8 @@ const render = (state, i18nInstance, elements) => {
       li.classList.add('list-group-item', 'list-group-item-dark');
 
       li.innerHTML = `
-      <h3>${feed.title}</h3>
-      <p>${feed.description}</p>
+      <h3>${feed.feedTitle}</h3>
+      <p>${feed.feedDescription}</p>
       `;
 
       elements.feeds.append(li);
@@ -32,7 +53,8 @@ const render = (state, i18nInstance, elements) => {
 
     posts.forEach((post) => {
       const li = document.createElement('li');
-      const isViewed = state.readIds.has(post.id);
+
+      const isViewed = state.readPosts.has(post);
 
       li.classList.add('list-group-item', 'list-group-item-dark', 'd-flex', 'justify-content-between');
       li.innerHTML = `
@@ -52,20 +74,42 @@ const render = (state, i18nInstance, elements) => {
       const a = li.querySelector('a');
       const showButton = li.querySelector('button');
 
+      // const postsUl = document.getElementById('posts_list');
+
+      // postsUl.addEventListener('click', (event) => {
+      //   const { target } = event;
+
+      //   if (target.tagName.toLowerCase() === 'a') {
+      //     console.log('hello from a')
+      //     if (!isViewed) {
+      //       state.readPosts.add(post);
+      //     }
+      //   }
+
+      //   if (target.tagName.toLowerCase() === 'button') {
+      //     console.log('hello from btn')
+      //     if (!isViewed) {
+      //       state.readPosts.add(post);
+      //     }
+
+      //     state.modal.currentPost = post;
+      //   }
+
+      // });
+
       a.addEventListener('click', () => {
         if (!isViewed) {
-          state.readIds.add(post.id);
+          state.readPosts.add(post);
         }
       });
 
       showButton.addEventListener('click', () => {
         if (!isViewed) {
-          state.readIds.add(post.id);
+          state.readPosts.add(post);
         }
 
-        handleViewPost(post);
+        state.modal.currentPost = post;
       });
-
       elements.posts.append(li);
     });
   };
@@ -79,7 +123,7 @@ const render = (state, i18nInstance, elements) => {
   }
 };
 
-export default (state, i18nInstance, elements) => {
+export default (state, elements) => {
   const clearFeedback = () => {
     elements.infoText.textContent = '';
     elements.infoText.classList.remove('text-danger', 'text-success');
@@ -92,6 +136,12 @@ export default (state, i18nInstance, elements) => {
   };
 
   const watchedState = onChange(state, (path, value) => {
+    if (path === 'modal.currentPost') {
+      if (value) {
+        const post = state.modal.currentPost;
+        handleViewPost(post, state);
+      }
+    }
     if (path === 'form.state') {
       switch (value) {
         case 'pending':
@@ -128,9 +178,9 @@ export default (state, i18nInstance, elements) => {
       }
     } else if (path === 'lang') {
       clearFeedback();
-      render(watchedState, i18nInstance, elements);
+      render(watchedState, elements);
     } else {
-      render(watchedState, i18nInstance, elements);
+      render(watchedState, elements);
     }
   });
 

@@ -10,7 +10,7 @@ export default {
     content: {
       posts: 'Посты',
       feeds: 'Фиды',
-      example: 'Пример',
+      example: 'Пример:',
     },
     buttons: {
       add: 'Добавить',

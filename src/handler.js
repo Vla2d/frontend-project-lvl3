@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 import loadRSS from './loader.js';
 import updateRSS from './updater.js';
-import validateLink from './validator.js';
+import { isValidLink } from './linkValidator.js';
 
 export const handleAddFeed = (e, state, i18nInstance) => {
   e.preventDefault();
@@ -11,13 +11,12 @@ export const handleAddFeed = (e, state, i18nInstance) => {
 
   document.querySelector('#url_input').value = '';
 
-  const error = validateLink(link, state.feeds);
-  state.form.error = error;
+  const isValid = isValidLink(link, state);
 
-  if (!error) {
+  if (isValid) {
     state.form.state = 'pending';
 
-    loadRSS(link)
+    loadRSS(link, state)
       .then((res) => {
         state.feeds.unshift(res.feed);
         state.posts = [...res.posts, ...state.posts];
@@ -42,11 +41,11 @@ export const handleAddFeed = (e, state, i18nInstance) => {
   }
 };
 
-export const handleViewPost = (post) => {
-  document.body.classList.add('modal-open');
+export const handleViewPost = (item, state) => {
+  const postId = state.posts.indexOf(item);
+  const post = state.posts[postId];
 
   document.querySelector('#modal_title').textContent = post.title;
   document.querySelector('#modal_body').innerHTML = post.description;
   document.querySelector('#modal_link').href = post.url;
-  document.querySelector('#modal').classList.add('show');
 };
