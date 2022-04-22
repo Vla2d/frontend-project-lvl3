@@ -1,4 +1,4 @@
-import { handleAddFeed } from './handler.js';
+import { handleAddFeed, handleViewPost } from './handler.js';
 import initView from './view.js';
 
 export default () => {
@@ -14,7 +14,7 @@ export default () => {
     updateProcess: {
       state: 'idle',
     },
-    readPosts: new Set(),
+    readPosts: [],
     modal: { currentPost: null },
   };
 
@@ -39,8 +39,30 @@ export default () => {
   const watchedState = initView(state, elements);
 
   const form = document.querySelector('form');
-
   form.addEventListener('submit', (e) => {
     handleAddFeed(e, watchedState);
+  });
+
+  const postsUl = document.getElementById('posts_list');
+  postsUl.addEventListener('click', (event) => {
+    const { target } = event;
+
+    const currentPostId = target.getAttribute('data-id');
+    state.modal.currentPost = state.posts[currentPostId];
+    const post = state.modal.currentPost;
+
+    if (target.tagName.toLowerCase() === 'a') {
+      if (!watchedState.readPosts.includes(post)) {
+        watchedState.readPosts.push(post);
+      }
+    }
+
+    if (target.tagName.toLowerCase() === 'button') {
+      if (!watchedState.readPosts.includes(post)) {
+        watchedState.readPosts.push(post);
+      }
+
+      handleViewPost(post, watchedState);
+    }
   });
 };

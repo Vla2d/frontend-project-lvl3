@@ -2,7 +2,6 @@
 import onChange from 'on-change';
 import { setLocale } from 'yup';
 import i18next from 'i18next';
-import { handleViewPost } from './handler.js';
 import ru from './locales/ru.js';
 
 const i18nInstance = i18next.createInstance();
@@ -54,62 +53,23 @@ const render = (state, elements) => {
     posts.forEach((post) => {
       const li = document.createElement('li');
 
-      const isViewed = state.readPosts.has(post);
+      const isViewed = state.readPosts.includes(post);
 
       li.classList.add('list-group-item', 'list-group-item-dark', 'd-flex', 'justify-content-between');
       li.innerHTML = `
-        <a href="${post.url}" class="${isViewed ? 'fw-normal' : 'fw-bold'}" target="_blank">
+        <a href="${post.url}" class="${isViewed ? 'fw-normal' : 'fw-bold'}" target="_blank" data-id="${post.id}">
           ${post.title}
         </a>
         <button 
           type="button" 
-          id="show_${post.id}" 
           class="btn btn-primary btn-sm"
           data-bs-toggle="modal"
           data-bs-target="#modal"
+          data-id="${post.id}"
         >${i18nInstance.t('buttons.preview')}
         </button>
       `;
 
-      const a = li.querySelector('a');
-      const showButton = li.querySelector('button');
-
-      // const postsUl = document.getElementById('posts_list');
-
-      // postsUl.addEventListener('click', (event) => {
-      //   const { target } = event;
-
-      //   if (target.tagName.toLowerCase() === 'a') {
-      //     console.log('hello from a')
-      //     if (!isViewed) {
-      //       state.readPosts.add(post);
-      //     }
-      //   }
-
-      //   if (target.tagName.toLowerCase() === 'button') {
-      //     console.log('hello from btn')
-      //     if (!isViewed) {
-      //       state.readPosts.add(post);
-      //     }
-
-      //     state.modal.currentPost = post;
-      //   }
-
-      // });
-
-      a.addEventListener('click', () => {
-        if (!isViewed) {
-          state.readPosts.add(post);
-        }
-      });
-
-      showButton.addEventListener('click', () => {
-        if (!isViewed) {
-          state.readPosts.add(post);
-        }
-
-        state.modal.currentPost = post;
-      });
       elements.posts.append(li);
     });
   };
@@ -136,11 +96,10 @@ export default (state, elements) => {
   };
 
   const watchedState = onChange(state, (path, value) => {
-    if (path === 'modal.currentPost') {
-      if (value) {
-        const post = state.modal.currentPost;
-        handleViewPost(post, state);
-      }
+    if (path === 'posts') {
+      state.posts.forEach((item) => {
+        item.id = state.posts.indexOf(item);
+      });
     }
     if (path === 'form.state') {
       switch (value) {

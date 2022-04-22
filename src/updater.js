@@ -5,7 +5,7 @@ import loadRSS from './loader.js';
 const links = [];
 
 const updateRSS = (state) => {
-  const promises = links.map(link => loadRSS(link, state));
+  const promises = links.map((link) => loadRSS(link, state));
 
   Promise.all(promises)
     .then((results) => {
