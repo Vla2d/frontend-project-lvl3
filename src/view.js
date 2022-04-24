@@ -76,11 +76,10 @@ export default (state, elements, i18nInstance) => {
 
   const watchedState = onChange(state, (path, value) => {
     if (path === 'posts') {
-      state.posts.forEach((item) => {
-        item.id = state.posts.indexOf(item);
+      value.forEach((item) => {
+        item.id = value.indexOf(item);
       });
-    }
-    if (path === 'form.state') {
+    } else if (path === 'form.state') {
       switch (value) {
         case 'pending':
           toggleForm(true);
@@ -109,14 +108,11 @@ export default (state, elements, i18nInstance) => {
       if (value) {
         elements.input.classList.add('is-invalid');
         elements.infoText.classList.add('text-danger');
-        elements.infoText.textContent = state.form.error;
+        elements.infoText.textContent = value;
       } else {
         elements.input.classList.remove('is-invalid');
         elements.infoText.classList.remove('text-danger');
       }
-    } else if (path === 'lang') {
-      clearFeedback();
-      render(watchedState, elements, i18nInstance);
     } else {
       render(watchedState, elements, i18nInstance);
     }

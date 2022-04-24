@@ -41,7 +41,6 @@ const addFeed = (e, state, i18nInstance) => {
   }
 };
 
-
 export const handleAddFeed = (e, state, i18nInstance) => {
   addFeed(e, state, i18nInstance);
 };
