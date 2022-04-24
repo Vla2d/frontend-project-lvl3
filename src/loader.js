@@ -1,12 +1,16 @@
 import axios from 'axios';
 import parseRSS from './parser.js';
 
-export default (url, state) => {
-  const isUnique = state.urls.includes(url);
+export default (link, state) => {
+  const isUnique = state.urls.includes(link);
   if (isUnique) {
-    state.urls.push(url);
+    state.urls.push(link);
   }
 
-  return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${url}`)
-    .then((res) => parseRSS(res.data.contents));
+  function Url() {
+    this.url = axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${link}`);
+  }
+
+  const parsedData = new Url(link).url.then((res) => parseRSS(res.data.contents));
+  return parsedData;
 };

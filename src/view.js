@@ -1,28 +1,7 @@
 /* eslint-disable no-param-reassign */
 import onChange from 'on-change';
-import { setLocale } from 'yup';
-import i18next from 'i18next';
-import ru from './locales/ru.js';
 
-const i18nInstance = i18next.createInstance();
-
-i18nInstance.init({
-  lng: 'ru',
-  resources: {
-    ru,
-  },
-}).then(() => {
-  setLocale({
-    mixed: {
-      notOneOf: () => i18nInstance.t('loadStatus.sameUrl'),
-    },
-    string: {
-      url: () => i18nInstance.t('loadStatus.invalidUrl'),
-    },
-  });
-});
-
-const render = (state, elements) => {
+const render = (state, elements, i18nInstance) => {
   elements.addButton.textContent = i18nInstance.t('buttons.add');
   elements.exampleText.textContent = i18nInstance.t('content.example');
   elements.feedsTitle.textContent = i18nInstance.t('content.feeds');
@@ -57,12 +36,12 @@ const render = (state, elements) => {
 
       li.classList.add('list-group-item', 'list-group-item-dark', 'd-flex', 'justify-content-between');
       li.innerHTML = `
-        <a href="${post.url}" class="${isViewed ? 'fw-normal' : 'fw-bold'}" target="_blank" data-id="${post.id}">
+        <a href="${post.url}" class="${isViewed ? 'fw-normal' : 'fw-bold'} view-post" target="_blank" data-id="${post.id}">
           ${post.title}
         </a>
         <button 
           type="button" 
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm view-post"
           data-bs-toggle="modal"
           data-bs-target="#modal"
           data-id="${post.id}"
@@ -83,7 +62,7 @@ const render = (state, elements) => {
   }
 };
 
-export default (state, elements) => {
+export default (state, elements, i18nInstance) => {
   const clearFeedback = () => {
     elements.infoText.textContent = '';
     elements.infoText.classList.remove('text-danger', 'text-success');
@@ -137,9 +116,9 @@ export default (state, elements) => {
       }
     } else if (path === 'lang') {
       clearFeedback();
-      render(watchedState, elements);
+      render(watchedState, elements, i18nInstance);
     } else {
-      render(watchedState, elements);
+      render(watchedState, elements, i18nInstance);
     }
   });
 

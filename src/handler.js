@@ -3,16 +3,18 @@ import loadRSS from './loader.js';
 import updateRSS from './updater.js';
 import { isValidLink } from './linkValidator.js';
 
-export const handleAddFeed = (e, state, i18nInstance) => {
-  e.preventDefault();
-
+const getFeedData = (e) => {
   const formData = new FormData(e.target);
   const link = formData.get('url').trim();
 
   document.querySelector('#url_input').value = '';
 
-  const isValid = isValidLink(link, state);
+  return link;
+};
 
+const addFeed = (e, state, i18nInstance) => {
+  const link = getFeedData(e);
+  const isValid = isValidLink(link, state);
   if (isValid) {
     state.form.state = 'pending';
 
@@ -32,8 +34,6 @@ export const handleAddFeed = (e, state, i18nInstance) => {
         state.form.state = 'failed';
         if (err.isAxiosError) {
           state.form.error = i18nInstance.t('loadStatus.netError');
-        } else {
-          state.form.error = i18nInstance.t('loadStatus.invalidRSS');
         }
       });
   } else {
@@ -41,11 +41,23 @@ export const handleAddFeed = (e, state, i18nInstance) => {
   }
 };
 
-export const handleViewPost = (item, state) => {
-  const postId = state.posts.indexOf(item);
-  const post = state.posts[postId];
+
+export const handleAddFeed = (e, state, i18nInstance) => {
+  addFeed(e, state, i18nInstance);
+};
+
+export const handleViewPost = (state) => {
+  const post = state.modal.currentPost;
 
   document.querySelector('#modal_title').textContent = post.title;
   document.querySelector('#modal_body').innerHTML = post.description;
   document.querySelector('#modal_link').href = post.url;
+};
+
+export const handleReadPost = (state) => {
+  const post = state.modal.currentPost;
+
+  if (!state.readPosts.includes(post)) {
+    state.readPosts.push(post);
+  }
 };

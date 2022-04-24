@@ -12,6 +12,6 @@ export const isValidLink = (link, state) => {
   } catch (e) {
     state.form.error = e.message;
     state.form.state = 'failed';
-    throw (e);
+    //throw (e);
   }
 };
