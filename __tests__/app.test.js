@@ -39,3 +39,11 @@ test('validation (unvalid url)', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'add' }));
   expect(await screen.findByText(/Ссылка должна быть валидным URL/i)).toBeInTheDocument();
 });
+
+test('handling non-rss url', async () => {
+  const htmlUrl = 'https://ru.hexlet.io';
+  await userEvent.type(screen.getByRole('textbox', { name: 'url' }), htmlUrl);
+  await userEvent.click(screen.getByRole('button', { name: 'add' }));
+
+  expect(await screen.findByText(/Ресурс не содержит валидный RSS/i)).toBeInTheDocument();
+});

@@ -34,6 +34,8 @@ const addFeed = (e, state, i18nInstance) => {
         state.form.state = 'failed';
         if (err.isAxiosError) {
           state.form.error = i18nInstance.t('loadStatus.netError');
+        } else {
+          state.form.error = i18nInstance.t('loadStatus.invalidRSS');
         }
       });
   } else {
