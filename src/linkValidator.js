@@ -10,8 +10,7 @@ export const isValidLink = (link, state) => {
     schema.validateSync(link);
     return true;
   } catch (e) {
-    console.log(e.message);
     state.form.error = e.message;
-    throw e;
+    return;
   }
 };
