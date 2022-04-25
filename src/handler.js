@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 import loadRSS from './loader.js';
 import updateRSS from './updater.js';
-import { isValidLink } from './linkValidator.js';
+import isValidLink from './linkValidator.js';
 
 const getFeedData = (e) => {
   const formData = new FormData(e.target);

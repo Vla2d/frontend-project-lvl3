@@ -1,7 +1,7 @@
-/* eslint-disable no-param-reassign, import/prefer-default-export */
+/* eslint-disable no-param-reassign, consistent-return, no-useless-return */
 import * as yup from 'yup';
 
-export const isValidLink = (link, state) => {
+const isValidLink = (link, state) => {
   const { urls } = state;
 
   const schema = yup.string().url().notOneOf(urls);
@@ -14,3 +14,5 @@ export const isValidLink = (link, state) => {
     return;
   }
 };
+
+export default isValidLink;
