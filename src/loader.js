@@ -15,6 +15,7 @@ export default (link, state) => {
     return url;
   };
 
-  const parsedData = axios.get(buildUrl()).then((res) => parseRSS(res.data.contents));
+  const url = buildUrl();
+  const parsedData = axios.get(url).then((res) => parseRSS(res.data.contents));
   return parsedData;
 };

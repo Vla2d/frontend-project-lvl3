@@ -34,10 +34,10 @@ const addFeed = (e, state, i18nInstance) => {
         state.form.state = 'failed';
         if (err.isAxiosError) {
           state.form.error = i18nInstance.t('loadStatus.netError');
-        } else {
+        }
+        if (err.isParsingError) {
           state.form.error = i18nInstance.t('loadStatus.invalidRSS');
         }
-        throw err;
       });
   } else {
     state.form.state = 'failed';
