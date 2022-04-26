@@ -7,10 +7,14 @@ export default (link, state) => {
     state.urls.push(link);
   }
 
-  function Url() {
-    this.url = axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${link}`);
-  }
+  const buildUrl = () => {
+    const url = new URL('https://allorigins.hexlet.app/get');
+    url.searchParams.set('disableCache', 'true');
+    url.searchParams.set('url', link);
 
-  const parsedData = new Url(link).url.then((res) => parseRSS(res.data.contents));
+    return url;
+  };
+
+  const parsedData = axios.get(buildUrl()).then((res) => parseRSS(res.data.contents));
   return parsedData;
 };

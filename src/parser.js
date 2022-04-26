@@ -1,11 +1,14 @@
 export default (content) => {
   const doc = new DOMParser().parseFromString(content, 'text/xml');
+  const parseError = doc.querySelector('parsererror');
+  if (parseError) {
+    const error = new Error('Parsing error');
+    error.isParsingError = true;
+    throw error;
+  }
+
   const feedTitle = doc.querySelector('title').textContent;
   const feedDescription = doc.querySelector('description').textContent;
-
-  if (!doc.querySelector('rss')) {
-    return false;
-  }
 
   const feed = {
     feedTitle, feedDescription,

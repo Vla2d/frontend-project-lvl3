@@ -79,6 +79,10 @@ export default (state, elements, i18nInstance) => {
       value.forEach((item) => {
         item.id = value.indexOf(item);
       });
+    } else if (path === 'modal.currentPost') {
+      document.querySelector('#modal_title').textContent = value.title;
+      document.querySelector('#modal_body').innerHTML = value.description;
+      document.querySelector('#modal_link').href = value.url;
     } else if (path === 'form.state') {
       switch (value) {
         case 'pending':

@@ -1,7 +1,7 @@
 import i18next from 'i18next';
 import { setLocale } from 'yup';
 import ru from './locales/ru.js';
-import { handleAddFeed, handleViewPost, handleReadPost } from './handler.js';
+import { handleAddFeed, handleReadPost } from './handler.js';
 import initView from './view.js';
 
 export default () => {
@@ -39,8 +39,7 @@ export default () => {
     modalClose: document.querySelector('#modal_close'),
   };
 
-  const i18nInstance = i18next.createInstance();
-  i18nInstance.init({
+  i18next.init({
     lng: 'ru',
     resources: {
       ru,
@@ -48,36 +47,30 @@ export default () => {
   }).then(() => {
     setLocale({
       mixed: {
-        notOneOf: () => i18nInstance.t('loadStatus.sameUrl'),
+        notOneOf: () => i18next.t('loadStatus.sameUrl'),
       },
       string: {
-        url: () => i18nInstance.t('loadStatus.invalidUrl'),
+        url: () => i18next.t('loadStatus.invalidUrl'),
       },
     });
-  });
 
-  const watchedState = initView(state, elements, i18nInstance);
+    const watchedState = initView(state, elements, i18next);
 
-  const { form } = elements;
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    handleAddFeed(e, watchedState, i18nInstance);
-  });
+    const { form } = elements;
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleAddFeed(e, watchedState, i18next);
+    });
 
-  const postsUl = elements.posts;
-  postsUl.addEventListener('click', (event) => {
-    const { target } = event;
-    const currentPostId = target.getAttribute('data-id');
-    watchedState.modal.currentPost = watchedState.posts[currentPostId];
+    const postsUl = elements.posts;
+    postsUl.addEventListener('click', (event) => {
+      const { target } = event;
+      const currentPostId = target.getAttribute('data-id');
+      watchedState.modal.currentPost = watchedState.posts[currentPostId];
 
-    if (target.getAttribute('class').includes('view-post')) {
-      handleReadPost(watchedState);
-    }
-
-    if (target.getAttribute('class').includes('view-post') && target.tagName.toLowerCase() === 'button') {
-      handleReadPost(watchedState);
-
-      handleViewPost(watchedState);
-    }
+      if (target.getAttribute('class').includes('view-post')) {
+        handleReadPost(watchedState);
+      }
+    });
   });
 };

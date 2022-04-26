@@ -37,6 +37,7 @@ const addFeed = (e, state, i18nInstance) => {
         } else {
           state.form.error = i18nInstance.t('loadStatus.invalidRSS');
         }
+        throw err;
       });
   } else {
     state.form.state = 'failed';
@@ -45,14 +46,6 @@ const addFeed = (e, state, i18nInstance) => {
 
 export const handleAddFeed = (e, state, i18nInstance) => {
   addFeed(e, state, i18nInstance);
-};
-
-export const handleViewPost = (state) => {
-  const post = state.modal.currentPost;
-
-  document.querySelector('#modal_title').textContent = post.title;
-  document.querySelector('#modal_body').innerHTML = post.description;
-  document.querySelector('#modal_link').href = post.url;
 };
 
 export const handleReadPost = (state) => {
