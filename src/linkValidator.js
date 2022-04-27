@@ -10,7 +10,9 @@ const isValidLink = (link, state) => {
     schema.validateSync(link);
     return true;
   } catch (e) {
-    state.form.error = e.message;
+    state.form.state = 'failed';
+    e.isValidationError = true;
+    state.form.error = e;
     return;
   }
 };
