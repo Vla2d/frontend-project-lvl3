@@ -59,7 +59,12 @@ export default () => {
     const { form } = elements;
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      handleAddFeed(e, watchedState, i18next);
+
+      const formData = new FormData(e.target);
+      const link = formData.get('url').trim();
+      watchedState.feeds.feedLink = link;
+
+      handleAddFeed(watchedState);
     });
 
     const postsUl = elements.posts;
@@ -69,7 +74,7 @@ export default () => {
       watchedState.modal.currentPost = watchedState.posts[currentPostId];
 
       if (target.getAttribute('class').includes('view-post')) {
-        handleReadPost(watchedState);
+        handleReadPost(watchedState, target.getAttribute('data-id'));
       }
     });
   });

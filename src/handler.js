@@ -3,17 +3,9 @@ import loadRSS from './loader.js';
 import updateRSS from './updater.js';
 import isValidLink from './linkValidator.js';
 
-const getFeedData = (e) => {
-  const formData = new FormData(e.target);
-  const link = formData.get('url').trim();
+export const handleAddFeed = (state) => {
+  const link = state.feeds.feedLink;
 
-  document.querySelector('#url_input').value = '';
-
-  return link;
-};
-
-const addFeed = (e, state, i18nInstance) => {
-  const link = getFeedData(e);
   const isValid = isValidLink(link, state);
   if (isValid) {
     state.form.state = 'pending';
@@ -27,29 +19,18 @@ const addFeed = (e, state, i18nInstance) => {
         state.form.state = 'success';
 
         updateRSS(link, state);
-
-        e.target.reset();
       })
       .catch((err) => {
         state.form.state = 'failed';
-        if (err.isAxiosError) {
-          state.form.error = i18nInstance.t('loadStatus.netError');
-        }
-        if (err.isParsingError) {
-          state.form.error = i18nInstance.t('loadStatus.invalidRSS');
-        }
+        state.form.error = err;
       });
   } else {
     state.form.state = 'failed';
   }
 };
 
-export const handleAddFeed = (e, state, i18nInstance) => {
-  addFeed(e, state, i18nInstance);
-};
-
-export const handleReadPost = (state) => {
-  const post = state.modal.currentPost;
+export const handleReadPost = (state, postId) => {
+  const post = state.posts[postId];
 
   if (!state.readPosts.includes(post)) {
     state.readPosts.push(post);

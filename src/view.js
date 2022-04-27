@@ -79,10 +79,12 @@ export default (state, elements, i18nInstance) => {
       value.forEach((item) => {
         item.id = value.indexOf(item);
       });
+    } else if (path === 'feeds') {
+      document.querySelector('#url_input').value = '';
     } else if (path === 'modal.currentPost') {
-      document.querySelector('#modal_title').textContent = value.title;
-      document.querySelector('#modal_body').innerHTML = value.description;
-      document.querySelector('#modal_link').href = value.url;
+      elements.modalTitle.textContent = value.title;
+      elements.modalContent.innerHTML = value.description;
+      elements.modalLink.href = value.url;
     } else if (path === 'form.state') {
       switch (value) {
         case 'pending':
@@ -99,7 +101,6 @@ export default (state, elements, i18nInstance) => {
         case 'failed':
           toggleForm(false);
           clearFeedback();
-          elements.infoText.textContent = state.form.error;
           elements.input.classList.add('is-invalid');
           elements.infoText.classList.add('text-danger');
           elements.infoText.classList.remove('d-none');
@@ -112,7 +113,13 @@ export default (state, elements, i18nInstance) => {
       if (value) {
         elements.input.classList.add('is-invalid');
         elements.infoText.classList.add('text-danger');
-        elements.infoText.textContent = value;
+        if (value.isParsingError) {
+          elements.infoText.innerHTML = i18nInstance.t('loadStatus.invalidRSS');
+        } else if (value.isAxiosError) {
+          elements.infoText.innerHTML = i18nInstance.t('loadStatus.netError');
+        } else if (value.isValidationError) {
+          elements.infoText.innerHTML = value.message;
+        }
       } else {
         elements.input.classList.remove('is-invalid');
         elements.infoText.classList.remove('text-danger');
