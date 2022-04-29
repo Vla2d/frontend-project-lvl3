@@ -1,17 +1,19 @@
 /* eslint-disable no-param-reassign */
 import onChange from 'on-change';
+import i18next from 'i18next';
 
-const render = (state, elements, i18nInstance) => {
-  elements.addButton.textContent = i18nInstance.t('buttons.add');
-  elements.exampleText.textContent = i18nInstance.t('content.example');
-  elements.feedsTitle.textContent = i18nInstance.t('content.feeds');
-  elements.postsTitle.textContent = i18nInstance.t('content.posts');
-  elements.modalLink.textContent = i18nInstance.t('modal.article');
-  elements.modalClose.textContent = i18nInstance.t('modal.close');
+// View
+const render = (state, elements, i18n) => {
+  elements.addButton.textContent = i18n.t('buttons.add');
+  elements.exampleText.textContent = i18n.t('content.example');
+  elements.feedsTitle.textContent = i18n.t('content.feeds');
+  elements.postsTitle.textContent = i18n.t('content.posts');
+  elements.modalLink.textContent = i18n.t('modal.article');
+  elements.modalClose.textContent = i18n.t('modal.close');
 
-  const buildFeeds = (feeds) => {
-    elements.container.classList.remove('d-none');
-    elements.feeds.innerHTML = '';
+  const buildFeeds = (feeds, selectedElements) => {
+    selectedElements.container.classList.remove('d-none');
+    selectedElements.feeds.innerHTML = '';
 
     feeds.forEach((feed) => {
       const li = document.createElement('li');
@@ -22,17 +24,18 @@ const render = (state, elements, i18nInstance) => {
       <p>${feed.feedDescription}</p>
       `;
 
-      elements.feeds.append(li);
+      selectedElements.feeds.append(li);
     });
   };
 
-  const buildPosts = (posts) => {
-    elements.posts.innerHTML = '';
+  const buildPosts = (posts, selectedElements, appState) => {
+    selectedElements.posts.innerHTML = '';
 
-    posts.forEach((post) => {
+    posts.forEach((post, index) => {
+      post.id = index;
       const li = document.createElement('li');
 
-      const isViewed = state.readPosts.includes(post);
+      const isViewed = appState.readPosts.includes(post);
 
       li.classList.add('list-group-item', 'list-group-item-dark', 'd-flex', 'justify-content-between');
       li.innerHTML = `
@@ -45,89 +48,128 @@ const render = (state, elements, i18nInstance) => {
           data-bs-toggle="modal"
           data-bs-target="#modal"
           data-id="${post.id}"
-        >${i18nInstance.t('buttons.preview')}
+        >${i18n.t('buttons.preview')}
         </button>
       `;
 
-      elements.posts.append(li);
+      selectedElements.posts.append(li);
     });
   };
 
   // Render feeds
   if (state.feeds.length > 0) {
-    buildFeeds(state.feeds);
-    buildPosts(state.posts);
+    buildFeeds(state.feeds, elements);
+    buildPosts(state.posts, elements, state);
   } else {
     elements.container.classList.add('d-none');
   }
 };
 
-export default (state, elements, i18nInstance) => {
-  const clearFeedback = () => {
-    elements.infoText.textContent = '';
-    elements.infoText.classList.remove('text-danger', 'text-success');
-    elements.input.classList.remove('is-invalid');
+// Utils
+const handleViewPost = (post, selectedElements) => {
+  selectedElements.modalTitle.textContent = post.title;
+  selectedElements.modalContent.innerHTML = post.description;
+  selectedElements.modalLink.href = post.url;
+};
+
+const handleLoadStatusState = (state, selectedElements, i18n) => {
+  switch (state) {
+    case 'running':
+      selectedElements.addButton.setAttribute('disabled', '');
+      selectedElements.input.setAttribute('readonly', '');
+      break;
+    case 'success':
+      selectedElements.input.value = '';
+
+      selectedElements.addButton.removeAttribute('disabled');
+      selectedElements.input.removeAttribute('readonly');
+      selectedElements.infoText.textContent = i18n.t('loadStatus.success');
+      break;
+    case 'failed':
+      selectedElements.addButton.removeAttribute('disabled');
+      selectedElements.input.removeAttribute('readonly');
+      break;
+    default:
+      throw new Error(`Unexpected state: ${state}`);
+  }
+};
+
+const handleLoadStatusError = (error, selectedElements, i18n) => {
+  selectedElements.infoText.textContent = '';
+
+  selectedElements.input.classList.add('is-invalid');
+  selectedElements.infoText.classList.add('text-danger');
+  selectedElements.infoText.classList.remove('d-none');
+
+  const handleErrorMessage = (errorType) => {
+    switch (errorType) {
+      case 'Parsing Error':
+        return i18n.t('loadStatus.invalidRSS');
+      case 'Network Error':
+        return i18n.t('loadStatus.netError');
+      default:
+        throw new Error(`Unexpected error: ${errorType}`);
+    }
   };
 
-  const toggleForm = (status) => {
-    elements.addButton.disabled = status;
-    elements.input.readOnly = status;
-  };
+  selectedElements.infoText.innerHTML = handleErrorMessage(error);
+};
 
+const handleFormState = (state, selectedElements) => {
+  switch (state) {
+    case 'success':
+      selectedElements.infoText.textContent = '';
+      selectedElements.infoText.classList.remove('text-danger', 'text-success');
+      selectedElements.input.classList.remove('is-invalid');
+
+      selectedElements.infoText.classList.add('text-success');
+      selectedElements.infoText.classList.remove('d-none');
+      break;
+    case 'failed':
+      selectedElements.infoText.textContent = '';
+      selectedElements.infoText.classList.remove('text-danger', 'text-success');
+      selectedElements.input.classList.remove('is-invalid');
+
+      selectedElements.input.classList.add('is-invalid');
+      selectedElements.infoText.classList.add('text-danger');
+      selectedElements.infoText.classList.remove('d-none');
+      break;
+    default:
+      throw new Error(`Unexpected state: ${state}`);
+  }
+};
+
+const handleFormError = (error, selectedElements, i18n) => {
+  selectedElements.infoText.textContent = '';
+  selectedElements.infoText.innerHTML = i18n.t(error);
+};
+
+// Watcher
+const initView = (state, elements) => {
   const watchedState = onChange(state, (path, value) => {
-    if (path === 'posts') {
-      value.forEach((item) => {
-        item.id = value.indexOf(item);
-      });
-    } else if (path === 'feeds') {
-      document.querySelector('#url_input').value = '';
-    } else if (path === 'modal.currentPost') {
-      elements.modalTitle.textContent = value.title;
-      elements.modalContent.innerHTML = value.description;
-      elements.modalLink.href = value.url;
-    } else if (path === 'form.state') {
-      switch (value) {
-        case 'pending':
-          toggleForm(true);
-          clearFeedback();
-          break;
-        case 'success':
-          toggleForm(false);
-          clearFeedback();
-          elements.infoText.textContent = i18nInstance.t('loadStatus.success');
-          elements.infoText.classList.add('text-success');
-          elements.infoText.classList.remove('d-none');
-          break;
-        case 'failed':
-          toggleForm(false);
-          clearFeedback();
-          elements.input.classList.add('is-invalid');
-          elements.infoText.classList.add('text-danger');
-          elements.infoText.classList.remove('d-none');
-          break;
-        default:
-          throw new Error(`Unexpected state: ${value}`);
-      }
-    } else if (path === 'form.error') {
-      elements.infoText.textContent = '';
-      if (value) {
-        elements.input.classList.add('is-invalid');
-        elements.infoText.classList.add('text-danger');
-        if (value.isParsingError) {
-          elements.infoText.innerHTML = i18nInstance.t('loadStatus.invalidRSS');
-        } else if (value.isAxiosError) {
-          elements.infoText.innerHTML = i18nInstance.t('loadStatus.netError');
-        } else if (value.isValidationError) {
-          elements.infoText.innerHTML = value.message;
-        }
-      } else {
-        elements.input.classList.remove('is-invalid');
-        elements.infoText.classList.remove('text-danger');
-      }
-    } else {
-      render(watchedState, elements, i18nInstance);
+    switch (path) {
+      case 'modal.currentPost':
+        handleViewPost(value, elements);
+        break;
+      case 'loadStatus.state':
+        handleLoadStatusState(value, elements, i18next);
+        break;
+      case 'loadStatus.errorType':
+        handleLoadStatusError(value, elements, i18next);
+        break;
+      case 'form.state':
+        handleFormState(value, elements);
+        break;
+      case 'form.error':
+        handleFormError(value, elements, i18next);
+        break;
+      default:
+        render(watchedState, elements, i18next);
+        break;
     }
   });
 
   return watchedState;
 };
+
+export default initView;
