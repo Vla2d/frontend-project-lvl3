@@ -1,3 +1,4 @@
+import 'bootstrap';
 import axios from 'axios';
 import _ from 'lodash';
 import i18next from 'i18next';
@@ -43,17 +44,12 @@ const parseRSS = (content) => {
 };
 
 // Validator
-const isValidLink = (link, urls, i18n) => {
+const validateLink = (link, urls, i18n) => {
   const schema = yup.string()
     .url(i18n.t('loadStatus.invalidUrl'))
     .notOneOf(urls, i18n.t('loadStatus.sameUrl'));
 
-  try {
-    schema.validateSync(link);
-    return null;
-  } catch (e) {
-    return e.message;
-  }
+  return schema.validate(link);
 };
 
 // Loader
@@ -87,6 +83,9 @@ const handleAddFeed = (state, link) => {
       res.feed.url = link;
       state.feeds.unshift(res.feed);
 
+      res.posts.forEach((post) => {
+        post.id = _.uniqueId();
+      });
       state.posts = [...res.posts, ...state.posts];
       state.urls.push(link);
 
@@ -101,19 +100,19 @@ const handleAddFeed = (state, link) => {
 };
 
 // Updater
-const updateRSS = (state) => {
+const updateRSS = (state, timeout = 5000) => {
   const requests = state.feeds.map((item) => fetchRSS(item.url)
     .catch((err) => {
-      state.loadStatus.state = 'failed';
-      state.form.state = 'failed';
-      state.loadStatus.errorType = getErrorType(err);
+      console.error(err);
     })
     .then((res) => {
-      const { feed } = parseRSS(res.data.contents);
+      const { feed, posts } = parseRSS(res.data.contents);
       feed.url = res.data.status.url;
+      posts.forEach((post) => {
+        post.id = _.uniqueId();
+      });
 
-      const requestedPosts = parseRSS(res.data.contents).posts;
-      const allPosts = _.union(requestedPosts, state.posts);
+      const allPosts = _.union(posts, state.posts);
       const newPosts = _.differenceBy(allPosts, state.posts, 'url');
       if (newPosts.length > 0) {
         state.posts = [...newPosts, ...state.posts];
@@ -123,16 +122,14 @@ const updateRSS = (state) => {
     }));
   Promise.all(requests)
     .finally(() => {
-      setTimeout(() => updateRSS(state), 5000);
+      setTimeout(() => updateRSS(state), timeout);
     });
 };
 
 // Read post
 const handleReadPost = (state, postId) => {
-  const post = state.posts[postId];
-
-  if (!state.readPosts.includes(post)) {
-    state.readPosts.push(post);
+  if (!state.readPostIds.includes(postId)) {
+    state.readPostIds.push(postId);
   }
 };
 
@@ -163,48 +160,50 @@ const app = () => {
     posts: [],
     form: {
       state: 'initial', // success, failed
-      error: '',
+      error: null,
     },
     loadStatus: {
       state: 'initial', // running, success, failed
       errorType: null,
     },
-    readPosts: [],
+    readPostIds: [],
     modal: { currentPost: null },
   };
 
-  return i18next.init({
+  const i18nInstance = i18next.createInstance();
+  return i18nInstance.init({
     lng: 'ru',
     resources: {
       ru,
     },
   }).then(() => {
-    const watchedState = initView(state, elements, i18next);
+    const watchedState = initView(state, elements, i18nInstance);
 
     const { form } = elements;
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
       const link = new FormData(e.target).get('url').trim();
-      const validationError = isValidLink(link, watchedState.urls, i18next);
-      if (validationError) {
-        watchedState.form.state = 'failed';
-        watchedState.form.error = validationError;
-        return;
-      }
-
-      watchedState.form.state = 'success';
-      handleAddFeed(watchedState, link);
+      validateLink(link, watchedState.urls, i18nInstance)
+        .then(() => {
+          watchedState.form.state = 'success';
+          handleAddFeed(watchedState, link);
+        })
+        .catch((err) => {
+          watchedState.form.state = 'failed';
+          watchedState.form.error = err.message;
+        });
     });
 
     const postsUl = elements.posts;
+
     postsUl.addEventListener('click', (event) => {
       const { target } = event;
       const currentPostId = target.getAttribute('data-id');
-      watchedState.modal.currentPost = watchedState.posts[currentPostId];
+      watchedState.modal.currentPost = watchedState.posts.find((el) => el.id === currentPostId);
 
       if (target.getAttribute('class').includes('view-post')) {
-        handleReadPost(watchedState, target.getAttribute('data-id'));
+        handleReadPost(watchedState, currentPostId);
       }
     });
     updateRSS(watchedState);

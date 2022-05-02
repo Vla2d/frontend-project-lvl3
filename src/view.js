@@ -29,11 +29,10 @@ const render = (state, elements, i18n) => {
   const buildPosts = (posts, selectedElements, appState) => {
     selectedElements.posts.innerHTML = '';
 
-    posts.forEach((post, index) => {
-      post.id = index;
+    posts.forEach((post) => {
       const li = document.createElement('li');
 
-      const isViewed = appState.readPosts.includes(post);
+      const isViewed = appState.readPostIds.includes(post.id);
 
       li.classList.add('list-group-item', 'list-group-item-dark', 'd-flex', 'justify-content-between');
       li.innerHTML = `
