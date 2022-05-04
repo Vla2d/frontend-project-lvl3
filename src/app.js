@@ -18,29 +18,29 @@ const parseRSS = (content) => {
     throw error;
   }
 
-  const feedTitle = doc.querySelector('title').textContent;
-  const feedDescription = doc.querySelector('description').textContent;
+  const title = doc.querySelector('title').textContent;
+  const description = doc.querySelector('description').textContent;
 
   const feed = {
-    feedTitle, feedDescription,
+    title, description,
   };
 
-  const posts = [];
+  const items = [];
 
   doc.querySelectorAll('item')
-    .forEach((post) => {
-      const postTitle = post.querySelector('title').textContent;
-      const postDescription = post.querySelector('description').textContent;
-      const postLink = post.querySelector('link').textContent;
+    .forEach((item) => {
+      const postTitle = item.querySelector('title').textContent;
+      const postDescription = item.querySelector('description').textContent;
+      const postLink = item.querySelector('link').textContent;
 
       const data = {
-        title: postTitle, description: postDescription, url: postLink,
+        title: postTitle, description: postDescription, link: postLink,
       };
 
-      posts.push(data);
+      items.push(data);
     });
 
-  return { feed, posts };
+  return { feed, items };
 };
 
 // Validator
@@ -75,50 +75,52 @@ const getErrorType = (error) => {
 // Controllers
 // Add feed
 const handleAddFeed = (state, link) => {
-  state.loadStatus.state = 'running';
+  state.loadStatus.state = 'loading';
 
   fetchRSS(link)
     .then((res) => parseRSS(res.data.contents))
     .then((res) => {
-      res.feed.url = link;
-      state.feeds.unshift(res.feed);
+      const { feed, items } = res;
 
-      res.posts.forEach((post) => {
+      state.feeds.unshift(feed);
+
+      const newPosts = items.map((post) => {
         post.id = _.uniqueId();
+        return post;
       });
-      state.posts = [...res.posts, ...state.posts];
-      state.urls.push(link);
+      state.posts = [...newPosts, ...state.posts];
 
-      state.loadStatus.state = 'success';
-      state.form.state = 'success';
+      state.urls.push(link);
+      state.loadStatus.state = 'idle';
+      state.form.isValid = true;
     })
     .catch((err) => {
       state.loadStatus.state = 'failed';
-      state.form.state = 'failed';
+      state.form.isValid = false;
       state.loadStatus.errorType = getErrorType(err);
     });
 };
 
 // Updater
 const updateRSS = (state, timeout = 5000) => {
-  const requests = state.feeds.map((item) => fetchRSS(item.url)
+  const requests = state.urls.map((link) => fetchRSS(link)
     .catch((err) => {
       console.error(err);
     })
     .then((res) => {
-      const { feed, posts } = parseRSS(res.data.contents);
-      feed.url = res.data.status.url;
-      posts.forEach((post) => {
-        post.id = _.uniqueId();
-      });
+      const { items } = parseRSS(res.data.contents);
 
-      const allPosts = _.union(posts, state.posts);
-      const newPosts = _.differenceBy(allPosts, state.posts, 'url');
+      const allPosts = _.union(items, state.posts);
+      const newPosts = _.differenceBy(allPosts, state.posts, 'link')
+        .map((post) => {
+          post.id = _.uniqueId();
+          return post;
+        });
       if (newPosts.length > 0) {
         state.posts = [...newPosts, ...state.posts];
       }
 
-      state.loadStatus.state = 'success';
+      state.loadStatus.state = 'idle';
     }));
   Promise.all(requests)
     .finally(() => {
@@ -159,11 +161,12 @@ const app = () => {
     feeds: [],
     posts: [],
     form: {
-      state: 'initial', // success, failed
+      state: 'filling',
+      isValid: null, // true, false
       error: null,
     },
     loadStatus: {
-      state: 'initial', // running, success, failed
+      state: 'idle', //  idle, loading, failed
       errorType: null,
     },
     readPostIds: [],
@@ -186,11 +189,11 @@ const app = () => {
       const link = new FormData(e.target).get('url').trim();
       validateLink(link, watchedState.urls, i18nInstance)
         .then(() => {
-          watchedState.form.state = 'success';
+          watchedState.form.isValid = true;
           handleAddFeed(watchedState, link);
         })
         .catch((err) => {
-          watchedState.form.state = 'failed';
+          watchedState.form.isValid = false;
           watchedState.form.error = err.message;
         });
     });

@@ -18,8 +18,8 @@ const render = (state, elements, i18n) => {
       li.classList.add('list-group-item', 'list-group-item-dark');
 
       li.innerHTML = `
-      <h3>${feed.feedTitle}</h3>
-      <p>${feed.feedDescription}</p>
+      <h3>${feed.title}</h3>
+      <p>${feed.description}</p>
       `;
 
       selectedElements.feeds.append(li);
@@ -36,7 +36,7 @@ const render = (state, elements, i18n) => {
 
       li.classList.add('list-group-item', 'list-group-item-dark', 'd-flex', 'justify-content-between');
       li.innerHTML = `
-        <a href="${post.url}" class="${isViewed ? 'fw-normal' : 'fw-bold'} view-post" target="_blank" data-id="${post.id}">
+        <a href="${post.link}" class="${isViewed ? 'fw-normal' : 'fw-bold'} view-post" target="_blank" data-id="${post.id}">
           ${post.title}
         </a>
         <button 
@@ -71,11 +71,11 @@ const handleViewPost = (post, selectedElements) => {
 
 const handleLoadStatusState = (state, selectedElements, i18n) => {
   switch (state) {
-    case 'running':
+    case 'loading':
       selectedElements.addButton.setAttribute('disabled', '');
       selectedElements.input.setAttribute('readonly', '');
       break;
-    case 'success':
+    case 'idle':
       selectedElements.input.value = '';
 
       selectedElements.addButton.removeAttribute('disabled');
@@ -112,9 +112,9 @@ const handleLoadStatusError = (error, selectedElements, i18n) => {
   selectedElements.infoText.innerHTML = handleErrorMessage(error);
 };
 
-const handleFormState = (state, selectedElements) => {
+const handleFormValidation = (state, selectedElements) => {
   switch (state) {
-    case 'success':
+    case true:
       selectedElements.infoText.textContent = '';
       selectedElements.infoText.classList.remove('text-danger', 'text-success');
       selectedElements.input.classList.remove('is-invalid');
@@ -122,7 +122,7 @@ const handleFormState = (state, selectedElements) => {
       selectedElements.infoText.classList.add('text-success');
       selectedElements.infoText.classList.remove('d-none');
       break;
-    case 'failed':
+    case false:
       selectedElements.infoText.textContent = '';
       selectedElements.infoText.classList.remove('text-danger', 'text-success');
       selectedElements.input.classList.remove('is-invalid');
@@ -154,8 +154,8 @@ const initView = (state, elements, i18n) => {
       case 'loadStatus.errorType':
         handleLoadStatusError(value, elements, i18n);
         break;
-      case 'form.state':
-        handleFormState(value, elements);
+      case 'form.isValid':
+        handleFormValidation(value, elements);
         break;
       case 'form.error':
         handleFormError(value, elements, i18n);
