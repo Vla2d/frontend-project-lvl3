@@ -92,11 +92,9 @@ const handleAddFeed = (state, link) => {
 
       state.urls.push(link);
       state.loadStatus.state = 'idle';
-      state.form.isValid = true;
     })
     .catch((err) => {
       state.loadStatus.state = 'failed';
-      state.form.isValid = false;
       state.loadStatus.errorType = getErrorType(err);
     });
 };
@@ -119,9 +117,8 @@ const updateRSS = (state, timeout = 5000) => {
       if (newPosts.length > 0) {
         state.posts = [...newPosts, ...state.posts];
       }
-
-      state.loadStatus.state = 'idle';
     }));
+
   Promise.all(requests)
     .finally(() => {
       setTimeout(() => updateRSS(state), timeout);
@@ -162,11 +159,11 @@ const app = () => {
     posts: [],
     form: {
       state: 'filling',
-      isValid: null, // true, false
+      isValid: true, // true, false
       error: null,
     },
     loadStatus: {
-      state: 'idle', //  idle, loading, failed
+      state: 'idle', // idle, loading, failed
       errorType: null,
     },
     readPostIds: [],
@@ -190,6 +187,7 @@ const app = () => {
       validateLink(link, watchedState.urls, i18nInstance)
         .then(() => {
           watchedState.form.isValid = true;
+          watchedState.form.error = null;
           handleAddFeed(watchedState, link);
         })
         .catch((err) => {
@@ -205,7 +203,7 @@ const app = () => {
       const currentPostId = target.getAttribute('data-id');
       watchedState.modal.currentPost = watchedState.posts.find((el) => el.id === currentPostId);
 
-      if (target.getAttribute('class').includes('view-post')) {
+      if (target.classList.contains('view-post')) {
         handleReadPost(watchedState, currentPostId);
       }
     });
