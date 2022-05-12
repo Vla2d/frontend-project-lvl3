@@ -38,14 +38,14 @@ const render = (state, elements, i18n) => {
       li.classList.add('list-group-item', 'list-group-item-dark', 'd-flex', 'justify-content-between');
 
       const postLinkText = document.createElement('a');
-      postLinkText.classList.add(`${isViewed ? 'fw-normal' : 'fw-bold'}`/* , 'view-post' */);
+      postLinkText.classList.add(`${isViewed ? 'fw-normal' : 'fw-bold'}`);
       postLinkText.setAttribute('href', post.link);
       postLinkText.setAttribute('target', '_blank');
       postLinkText.dataset.id = post.id;
       postLinkText.textContent = post.title;
 
       const postButton = document.createElement('button');
-      postButton.classList.add('btn', 'btn-primary', 'btn-sm'/* , 'view-post' */);
+      postButton.classList.add('btn', 'btn-primary', 'btn-sm');
       postButton.setAttribute('data-id', `${post.id}`);
       postButton.setAttribute('data-bs-toggle', 'modal');
       postButton.setAttribute('data-bs-target', '#modal');

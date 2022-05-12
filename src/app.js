@@ -1,6 +1,6 @@
 import 'bootstrap';
 import axios from 'axios';
-import _ from 'lodash';
+import { uniqueId, union, differenceBy } from 'lodash';
 import i18next from 'i18next';
 import * as yup from 'yup';
 import ru from './locales/ru.js';
@@ -25,10 +25,8 @@ const parseRSS = (content) => {
     title, description,
   };
 
-  const items = [];
-
-  doc.querySelectorAll('item')
-    .forEach((item) => {
+  const items = [...doc.querySelectorAll('item')]
+    .map((item) => {
       const postTitle = item.querySelector('title').textContent;
       const postDescription = item.querySelector('description').textContent;
       const postLink = item.querySelector('link').textContent;
@@ -37,7 +35,7 @@ const parseRSS = (content) => {
         title: postTitle, description: postDescription, link: postLink,
       };
 
-      items.push(data);
+      return data;
     });
 
   return { feed, items };
@@ -82,15 +80,15 @@ const handleAddFeed = (state, link) => {
     .then((res) => {
       const { feed, items } = res;
 
+      feed.url = link;
       state.feeds.unshift(feed);
 
       const newPosts = items.map((post) => {
-        post.id = _.uniqueId();
+        post.id = uniqueId();
         return post;
       });
       state.posts = [...newPosts, ...state.posts];
 
-      state.urls.push(link);
       state.loadStatus.state = 'idle';
     })
     .catch((err) => {
@@ -101,17 +99,17 @@ const handleAddFeed = (state, link) => {
 
 // Updater
 const updateRSS = (state, timeout = 5000) => {
-  const requests = state.urls.map((link) => fetchRSS(link)
+  const requests = state.feeds.map((feed) => fetchRSS(feed.url)
     .catch((err) => {
       console.error(err);
     })
     .then((res) => {
       const { items } = parseRSS(res.data.contents);
 
-      const allPosts = _.union(items, state.posts);
-      const newPosts = _.differenceBy(allPosts, state.posts, 'link')
+      const allPosts = union(items, state.posts);
+      const newPosts = differenceBy(allPosts, state.posts, 'link')
         .map((post) => {
-          post.id = _.uniqueId();
+          post.id = uniqueId();
           return post;
         });
       if (newPosts.length > 0) {
@@ -154,7 +152,6 @@ const app = () => {
   };
 
   const state = {
-    urls: [],
     feeds: [],
     posts: [],
     form: {
@@ -184,7 +181,8 @@ const app = () => {
       e.preventDefault();
 
       const link = new FormData(e.target).get('url').trim();
-      validateLink(link, watchedState.urls, i18nInstance)
+      const existedUrls = watchedState.feeds.map((feed) => feed.url);
+      validateLink(link, existedUrls, i18nInstance)
         .then(() => {
           watchedState.form.isValid = true;
           watchedState.form.error = null;
@@ -200,12 +198,14 @@ const app = () => {
 
     postsUl.addEventListener('click', (event) => {
       const { target } = event;
-      const currentPostId = target.getAttribute('data-id');
-      watchedState.modal.currentPost = watchedState.posts.find((el) => el.id === currentPostId);
 
-      if (currentPostId) {
-        handleReadPost(watchedState, currentPostId);
+      const currentPostId = target.getAttribute('data-id');
+      if (!currentPostId) {
+        return;
       }
+
+      watchedState.modal.currentPost = watchedState.posts.find((el) => el.id === currentPostId);
+      handleReadPost(watchedState, currentPostId);
     });
     updateRSS(watchedState);
   });
