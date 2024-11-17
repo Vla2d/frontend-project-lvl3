@@ -4,6 +4,7 @@ import { uniqueId, union, differenceBy } from 'lodash';
 import i18next from 'i18next';
 import * as yup from 'yup';
 import ru from './locales/ru.js';
+import en from './locales/en.js';
 import initView from './view.js';
 
 // Utils
@@ -169,9 +170,9 @@ const app = () => {
 
   const i18nInstance = i18next.createInstance();
   return i18nInstance.init({
-    lng: 'ru',
+    lng: 'en',
     resources: {
-      ru,
+      en,
     },
   }).then(() => {
     const watchedState = initView(state, elements, i18nInstance);
